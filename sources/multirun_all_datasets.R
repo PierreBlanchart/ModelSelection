@@ -1,39 +1,6 @@
 library(opera)
 library(modelselect)
 source('utils_generic.R')
-# set.seed(seed = 1e3)
-
-
-
-computeR.debug <- function(start.t, end.t, E.obs, R.val, mu.LBI) {
-  
-  E.max <- apply(E.obs, MARGIN=1, FUN=max)
-  rwd <- t(E.max-E.obs)
-  for (t in start.t:end.t) {
-    R.val[, t:end.t] <- R.val[, t:end.t]*(1 + rwd[, t, drop=FALSE]%*%mu.LBI[1:(end.t-t+1)])
-  }
-  
-  return(R.val)
-  
-}
-
-
-
-modelSelection_simple <- function(start.t, end.t, pred, E.obs, R.val, mu.LBI) {
-  
-  E.max <- apply(E.obs, MARGIN=1, FUN=max)
-  rwd <- t(E.max-E.obs)
-  
-  mat.pred <- matrix(NA, seq.len, seq.len)
-  for (t in start.t:end.t) {
-    R.val[, t:end.t] <- R.val[, t:end.t]*(1 + rwd[, t, drop=FALSE]%*%mu.LBI[1:(end.t-t+1)])
-    ind.max.t <- apply(R.val[, t:end.t, drop=FALSE], MARGIN=c(2), FUN=which.max)
-    mat.pred[t:end.t, t] <- pred[(ind.max.t-1)*seq.len + (t:end.t)]
-  }
-  
-  return(list(pred=mat.pred, rwd=R.val))
-  
-}
 
 
 
@@ -73,7 +40,7 @@ N.run <- 2
 
 library(doMC)
 registerDoMC(min(N.run, max(1, detectCores()-1))) # number of CPU cores
-res.run <- foreach(n = 1:N.run) %do% ({
+res.run <- foreach(n = 1:N.run) %dopar% ({
   
   print(paste0('Performing run ', n, ' ...'))
   
