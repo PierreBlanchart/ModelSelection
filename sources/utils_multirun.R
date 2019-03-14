@@ -1,49 +1,10 @@
 library(opera)
 library(modelselect)
 source('utils_generic.R')
-# set.seed(seed = 1e3)
 
 
 
-########################################################################################################################
-loc.pred <- './allpreds/'
-
-model.types <- c('CF', 'xgb', 'GAM')
-dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
-dataset.run <- 'bike'
-
-num.modelPerDataset <- cntModelsPerDataset(model.types, dataset.names)
-
-
-
-########################################################################################################################
-load(paste0('data_', dataset.run, '.RData')); rm(featmat); gc()
-
-nb.models <- 16 # number of models to select from
-
-
-
-########################################################################################################################
-# R-opera baselines
-baselines.op <- c('BOA', 'FS', 'MLpol', 'MLewa', 'EWA', 'OGD', 'Ridge')
-baselines.loss <- c('absolute', 'absolute', 'absolute', 'absolute', 'absolute', 'absolute', 'square'); names(baselines.loss) <- baselines.op
-
-baselines.op <- c('FS', 'MLpol', 'MLewa', 'EWA')
-baselines.loss <- baselines.loss[baselines.op]
-
-coeffs.aggr <- rep(1/nb.models, nb.models) # simple aggregate rule
-
-
-
-########################################################################################################################
-N.run <- 1
-PLOT <- TRUE
-
-
-
-library(doMC)
-registerDoMC(min(N.run, max(1, detectCores()-1))) # number of CPU cores
-res.run <- foreach(n = 1:N.run) %do% ({
+fun_closure_run <- function(n, dataset.run, nb.models, baselines.op, baselines.loss, PLOT) {
   
   print(paste0('Performing run ', n, ' ...'))
   
@@ -61,7 +22,7 @@ res.run <- foreach(n = 1:N.run) %do% ({
   ######################################## model selection ########################################
   #################################################################################################
   
-  obj.madymos <- madymos(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, lambda=1e-1, thresh.switch.off=0.1)
+  obj.madymos <<- madymos(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, lambda=1e-1, thresh.switch.off=0.1)
   
   # runs model selection
   N.test <- dim(allpreds)[1]
@@ -78,13 +39,13 @@ res.run <- foreach(n = 1:N.run) %do% ({
     pred.jj <- allpreds[jj, , ]
     obj.select.jj <- runModelSelection(pred=pred.jj, obs=obj.test[jj, ], online=FALSE)
     array.pred.ms[jj, , ] <- obj.select.jj$mat_pred
-
+    
     # aggregate model, opera
     lst.model.op <- list()
     for (base in baselines.op) lst.model.op[[base]] <- mixture(model = base, loss.type = baselines.loss[base])
     for (tt in 1:seq.len) {
       # aggregate
-      array.pred.aggr[jj,tt:seq.len,tt] <- pred.jj[tt:seq.len, , drop=FALSE]%*%coeffs.aggr
+      array.pred.aggr[jj,tt:seq.len,tt] <- rowMeans(pred.jj[tt:seq.len, , drop=FALSE])
       
       # best model
       array.pred.bm[jj,tt:seq.len,tt] <- pred.jj[tt:seq.len, ind.best.model]
@@ -134,14 +95,21 @@ res.run <- foreach(n = 1:N.run) %do% ({
     ind.model=obj.sampleModels$ind.model
   )
   
-})
+  return(obj.run)
+  
+}
 
 
 
-# save results
-loc.results <- './resMultirun/'
-dir.create(file.path('./', loc.results), showWarnings=FALSE)
-saveRDS(file=paste0(loc.results, '/results_', dataset.run, '_', nb.models, '.rds'), res.run)
-
+multirun <- function(dataset.run, nb.models, baselines.op, baselines.loss, N.run=1, PLOT=FALSE) {
+  
+  library(doMC)
+  registerDoMC(min(N.run, max(1, detectCores()-1))) # number of CPU cores
+  
+  res.run <- foreach(it = 1:N.run) %dopar% (fun_closure_run(it, dataset.run, nb.models, baselines.op, baselines.loss, PLOT))
+  
+  return(res.run)
+  
+}
 
 
