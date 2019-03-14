@@ -1,6 +1,7 @@
 library(opera)
 library(modelselect)
 source('utils_generic.R')
+# set.seed(seed = 1e3)
 
 
 
@@ -16,31 +17,33 @@ num.modelPerDataset <- cntModelsPerDataset(model.types, dataset.names)
 
 
 ########################################################################################################################
-load(paste0('data_', dataset.run, '.RData'))
-rm(featmat); gc()
+load(paste0('data_', dataset.run, '.RData')); rm(featmat); gc()
 
-nb.models <- 32 # number of models to select from
+nb.models <- 16 # number of models to select from
 
 
 
 ########################################################################################################################
 # R-opera baselines
 baselines.op <- c('BOA', 'FS', 'MLpol', 'MLewa', 'EWA', 'OGD', 'Ridge')
-baselines.loss <- c('absolute', 'absolute', 'absolute', 'absolute', 'absolute', 'absolute', 'square')
-ind.base <- 6
+baselines.loss <- c('absolute', 'absolute', 'absolute', 'absolute', 'absolute', 'absolute', 'square'); names(baselines.loss) <- baselines.op
+
+baselines.op <- c('FS', 'MLpol', 'MLewa', 'EWA')
+baselines.loss <- baselines.loss[baselines.op]
 
 coeffs.aggr <- rep(1/nb.models, nb.models) # simple aggregate rule
 
 
 
 ########################################################################################################################
-N.run <- 2
+N.run <- 1
+PLOT <- TRUE
 
 
 
 library(doMC)
 registerDoMC(min(N.run, max(1, detectCores()-1))) # number of CPU cores
-res.run <- foreach(n = 1:N.run) %dopar% ({
+res.run <- foreach(n = 1:N.run) %do% ({
   
   print(paste0('Performing run ', n, ' ...'))
   
@@ -65,7 +68,9 @@ res.run <- foreach(n = 1:N.run) %dopar% ({
   array.pred.ms <- array(NA, c(N.test, seq.len, seq.len))
   array.pred.aggr <- array(NA, c(N.test, seq.len, seq.len))
   array.pred.bm <- array(NA, c(N.test, seq.len, seq.len))
-  array.pred.op <- array(NA, c(N.test, seq.len, seq.len))
+  
+  lst.array.pred.op <- list()
+  for (base in baselines.op) lst.array.pred.op[[base]] <- array(NA, c(N.test, seq.len, seq.len))
   
   pb <- txtProgressBar()
   for (jj in 1:N.test) {
@@ -75,7 +80,8 @@ res.run <- foreach(n = 1:N.run) %dopar% ({
     array.pred.ms[jj, , ] <- obj.select.jj$mat_pred
 
     # aggregate model, opera
-    model.op <- mixture(model = baselines.op[ind.base], loss.type = baselines.loss[ind.base])
+    lst.model.op <- list()
+    for (base in baselines.op) lst.model.op[[base]] <- mixture(model = base, loss.type = baselines.loss[base])
     for (tt in 1:seq.len) {
       # aggregate
       array.pred.aggr[jj,tt:seq.len,tt] <- pred.jj[tt:seq.len, , drop=FALSE]%*%coeffs.aggr
@@ -84,8 +90,10 @@ res.run <- foreach(n = 1:N.run) %dopar% ({
       array.pred.bm[jj,tt:seq.len,tt] <- pred.jj[tt:seq.len, ind.best.model]
       
       # opera
-      model.op <- predict(model.op, newexperts=matrix(pred.jj[tt, ], nrow=1), newY = obj.test[jj, tt], online=TRUE, type="model")
-      array.pred.op[jj,tt:seq.len,tt] <- predict(model.op, newexperts=pred.jj[tt:seq.len, , drop=FALSE], online=FALSE, type="response")
+      for (base in baselines.op) {
+        lst.model.op[[base]] <- predict(lst.model.op[[base]], newexperts=matrix(pred.jj[tt, ], nrow=1), newY = obj.test[jj, tt], online=TRUE, type="model")
+        lst.array.pred.op[[base]][jj,tt:seq.len,tt] <- predict(lst.model.op[[base]], newexperts=pred.jj[tt:seq.len, , drop=FALSE], online=FALSE, type="response")
+      }
     }
     
     setTxtProgressBar(pb, jj/N.test)
@@ -98,17 +106,24 @@ res.run <- foreach(n = 1:N.run) %dopar% ({
   cae.ms <- scoreRun(array.pred.ms, obj.test) # madymos
   cae.aggr <- scoreRun(array.pred.aggr, obj.test) # simple aggregation rule
   cae.bm <- scoreRun(array.pred.bm, obj.test) # best model
-  cae.op <- scoreRun(array.pred.op, obj.test) # opera baseline "ind.base"
   
-  # print(paste0('Aggr. score ms = ',  sum(cae.ms, na.rm=TRUE)))
-  # plot_curves(
-  #   subS=subS,
-  #   step.plot=1,
-  #   curves=cbind(cae.ms, cae.aggr, cae.bm, cae.op),
-  #   colors=c('skyblue3', 'black', 'pink', 'darkorange'),
-  #   legend=c('ms', 'aggr.', paste0('bm.: ', model.types[[obj.sampleModels$ind.type[ind.best.model]]]), 'op.'),
-  #   x.name='time of day', y.name='cumulative AE'
-  # )
+  # opera baselines
+  cae.op <- matrix(NA, length(baselines.op), seq.len); rownames(cae.op) <- baselines.op
+  for (base in baselines.op)  cae.op[base, ] <- scoreRun(lst.array.pred.op[[base]], obj.test)
+  
+  if (PLOT) {
+    print(paste0('Aggr. score ms = ',  sum(cae.ms, na.rm=TRUE)))
+    N.methods <- 3 + length(baselines.op)
+    colors <- glasbey(); N.colors <- length(colors)
+    plot_curves(
+      subS=subS,
+      step.plot=1,
+      curves=cbind(cae.ms, cae.aggr, cae.bm, t(cae.op)),
+      colors= colors[(0:(N.methods-1))%%N.colors + 1],
+      legend=c('ms', 'aggr.', paste0('bm.: ', model.types[[obj.sampleModels$ind.type[ind.best.model]]]), rownames(cae.op)),
+      x.name='time of day', y.name='cumulative AE'
+    )
+  }
   
   # format res
   obj.run <- list(
@@ -122,9 +137,10 @@ res.run <- foreach(n = 1:N.run) %dopar% ({
 })
 
 
-loc.results <- './resMultirun/'
-dir.create(file.path('./', loc.pred), showWarnings=FALSE)
 
+# save results
+loc.results <- './resMultirun/'
+dir.create(file.path('./', loc.results), showWarnings=FALSE)
 saveRDS(file=paste0(loc.results, '/results_', dataset.run, '_', nb.models, '.rds'), res.run)
 
 
