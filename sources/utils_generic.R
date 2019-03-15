@@ -80,7 +80,7 @@ genModelName <- function(model.name='model', N.units=3, max.key=1e3) {
 
 
 # split dataset between train and test set, with a "sanity" interval between end of train and beginning of test
-formSplit <- function(pct.test=3e-1, sanity=sanitydays) {
+formSplit <- function(pct.test=3e-1, sanity=7) {
   
   if (!exists("data.array")) data.array <- array(t(featmat), dim=c(fs+1, seq.len, nrow(featmat)/seq.len))
   seq.len <- dim(data.array)[2]

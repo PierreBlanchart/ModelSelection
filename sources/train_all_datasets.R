@@ -7,10 +7,10 @@ source('utils_train.R')
 model.types <- c('CF', 'xgb', 'GAM')
 dataset.names <- c('Electricity', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
 
-sanitydays <- 7
 nb.models <- 256 # number of models to train per type of model and per dataset
 
-do.par <- TRUE
+do.par <- TRUE # set this to FALSE on Windows
+if (do.par) library(doMC);
 
 
 
