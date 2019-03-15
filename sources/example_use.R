@@ -8,7 +8,7 @@ source('utils_predict.R')
 ################################################ loads dataset #########################################################
 ########################################################################################################################
 dataset <- 'CO2'
-load(paste0('../data_', dataset, '.RData')) # loads bike dataset
+load(paste0('../data_', dataset, '.RData')) # loads dataset
 
 nb.models <- 8
 model.types <- c('xgb', 'GAM') # "nb.models" models of each category will be trained
@@ -21,9 +21,10 @@ if (do.par) library(doMC);
 ######################################## splits between train and test #################################################
 ########################################################################################################################
 data.array <- array(t(featmat), dim=c(fs+1, seq.len, nrow(featmat)/seq.len))
-obj.split <- formSplit(); N.test <- length(obj.split$ind.test)
-feat.names <- colnames(featmat)[1:(ncol(featmat)-1)]
-target <- colnames(featmat)[ncol(featmat)]
+obj.split <- formSplit(pct.test=3e-1, sanity=7) # keeps last 30 percents for test, and removes 7 days between last day of train and first day of test
+N.test <- length(obj.split$ind.test) # number of test days
+feat.names <- colnames(featmat)[1:(ncol(featmat)-1)] # feature names
+target <- colnames(featmat)[ncol(featmat)] # variable to predict
 
 
 ########################################################################################################################
@@ -31,15 +32,15 @@ target <- colnames(featmat)[ncol(featmat)]
 ########################################################################################################################
 for (model.type in model.types) {
   
-  loc.models <- paste0('./predModels_', dataset, '_', model.type, '/')
+  loc.models <- paste0('./predModels_', dataset, '_', model.type, '/') # trained models will be saved in this directory
   dir.create(file.path('./', loc.models), showWarnings=FALSE)
   
   # samples feature space
   mat.feat <- matrix(runif(nb.models*length(feat.names)), nb.models) > 0.5
   for (r in 1:nb.models) mat.feat[r, ind.analytical] <- TRUE
   
-  if (model.type != 'xgb' && do.par) {
-    registerDoMC(min(nb.models, max(1, detectCores()-1))) # number of CPU cores
+  if (model.type != 'xgb' && do.par) { # XGBoost is already parallelized
+    registerDoMC(min(nb.models, max(1, detectCores()-1))) # number of CPU cores (keep one for OS)
     LOSS <- foreach(it=1:nb.models, .combine='c') %dopar% (train_fun[[model.type]](it, dataset, mat.feat[it, ], feat.names, target, verbose=FALSE))
   } else {
     LOSS <- foreach(it=1:nb.models, .combine='c') %do% (train_fun[[model.type]](it, dataset, mat.feat[it, ], feat.names, target, verbose=FALSE))
@@ -103,7 +104,7 @@ array.pred.aggr <- array(NA, c(N.test, seq.len, seq.len))
 obj.madymos <- madymos(nb.select, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, thresh.switch.off=0.1)
 
 pb <- txtProgressBar()
-for (jj in 1:N.test) {
+for (jj in 1:N.test) { # loops over test days
   
   pred.jj <- allpreds[jj, , ] # predictions of all models for day "jj"
   
@@ -115,9 +116,9 @@ for (jj in 1:N.test) {
     
     # updates model selection strategy
     obj.pred <- updateStrategy(pred.jj[tt:seq.len, , drop=FALSE], newObs=newObs.tt)
-    array.pred.ms[jj, tt:seq.len, tt] <- obj.pred$mat_pred
+    array.pred.ms[jj, tt:seq.len, tt] <- obj.pred$mat_pred # record predictions associated with current model selection strategy on the interval [tt, seq.len]
     
-    # best model
+    # best model (oracle)
     array.pred.bm[jj, tt:seq.len, tt] <- pred.jj[tt:seq.len, ind.best.model]
     
     # simple aggregate model
