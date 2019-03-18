@@ -22,7 +22,7 @@ for (dataset in dataset.names) {
   # loads dataset
   load(paste0('data_', dataset, '.RData'))
   data.array <- array(t(featmat), dim=c(fs+1, seq.len, nrow(featmat)/seq.len))
-  obj.split <- formSplit(sanity=sanitydays); N.test <- length(obj.split$ind.test)
+  obj.split <- formSplit(sanity=7); N.test <- length(obj.split$ind.test)
   
   feat.names <- colnames(featmat)[1:(ncol(featmat)-1)]
   target <- colnames(featmat)[ncol(featmat)]
