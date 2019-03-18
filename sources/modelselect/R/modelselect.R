@@ -80,7 +80,8 @@ initTrans <- function(nb.models, K) {
 
 
 #' @export
-madymos <- function(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, lambda=1e-1, thresh.switch.off=1e-1, clamp=NULL) {
+madymos <- function(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, lambda=1e-1, thresh.switch.off=1e-1,
+                    lambda.mu=0.9, pct.fst=2/3, clamp=NULL) {
 
   nb.states <- nb.models^K
   obj_Kmodel <- initTrans(nb.models, K)
@@ -115,22 +116,6 @@ madymos <- function(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95
   obj_Kmodel$ind.next <- ind.next[, 1:N.next]
   obj_Kmodel$mat.trans <- cos.sim[, 1:N.next]
 
-  # # keep nTrans less penalized transitions
-  # ind.sorted <- t(apply(cos.sim, MARGIN=c(1), FUN=function(row) {
-  #     obj.sorted <- sort(row, index.return=TRUE, decreasing=TRUE)
-  #     return(obj.sorted$ix)
-  #   }
-  # ))
-  # temp.ind <- t( (ind.sorted-1)*nb.states + matrix( rep( (1:nb.states), nb.models ), nb.states ) )
-  # cos.sim <- t( matrix( cos.sim[temp.ind], nb.models ) )
-  # cos.sim <- cos.sim[, 1:min(nTrans, nb.models)]
-  #
-  # obj_Kmodel$mat.trans <- cos.sim
-  #
-  # temp.next <- obj_Kmodel$ind.next
-  # temp.next <- t( matrix( temp.next[temp.ind], nb.models ) )
-  # obj_Kmodel$ind.next <- temp.next[, 1:min(nTrans, nb.models)]
-
   obj_Kmodel$perm <- as.vector(obj_Kmodel$perm)
   obj_Kmodel$ind.next <- as.vector(obj_Kmodel$ind.next)
 
@@ -145,11 +130,44 @@ madymos <- function(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95
               LBI.profile = mu.LBI^(0:(seq.len-1)),
               R.cur = matrix(1, nb.models, seq.len),
               lambda = lambda,
+              lambda.mu = lambda.mu,
+              pct.fst = pct.fst,
               E.estimate = matrix(0, seq.len, nb.models),
               R.estimate = matrix(0, nb.models, seq.len),
-              N.E.estimate = 0
+              N.E.estimate = 0,
+              mat.LBI = matrix(0, seq.len, nb.models),
+              cnt.LBI = matrix(0, seq.len, nb.models)
   )
   )
+
+}
+
+
+
+estimateLBI <- function(pred, obs, pct.fst=2/3) {
+
+  nb.models <- ncol(pred)
+  seq.len <- nrow(pred)
+  error <- abs(pred-obs)
+
+  for (t in 1:seq.len) {
+
+    ind.best.t <- which.min(error[t, ])
+    ind.sorted.t <- t(apply(error[t:seq.len, , drop=FALSE], MARGIN=c(1), FUN=function(row) {
+      obj.sorted <- sort(row, index.return=TRUE)
+      obj.sorted$ix
+    }))
+    ind.t <- match(TRUE, rowSums(ind.sorted.t[, 1:max(1, round(pct.fst*nb.models)), drop=FALSE] == ind.best.t) == 0)
+
+    if (!is.na(ind.t)) {
+      obj.madymos$mat.LBI[t, ind.best.t[1]] <<- obj.madymos$mat.LBI[t, ind.best.t[1]] + (ind.t-1)
+      obj.madymos$cnt.LBI[t, ind.best.t[1]] <<- obj.madymos$cnt.LBI[t, ind.best.t[1]] + 1
+    }
+  }
+
+  duration.mean <- sum( obj.madymos$mat.LBI/sum(obj.madymos$cnt.LBI, na.rm=TRUE) , na.rm=TRUE )
+
+  return(1 - 1/duration.mean)
 
 }
 
@@ -179,11 +197,10 @@ updateStrategy <- function(newPred, newObs) {
 #' @export
 #' simulates a run over a whole period
 #' outputs seq.len successive model selection strategies with corresponding predictions
-runModelSelection <- function(pred, obs, online=FALSE) {
+runModelSelection <- function(pred, obs, online=FALSE, compute.LBI=FALSE) {
 
   nb.models <- ncol(pred)
   seq.len <- nrow(pred)
-
   error <- abs(pred-obs)
 
   if (online) {
@@ -200,6 +217,12 @@ runModelSelection <- function(pred, obs, online=FALSE) {
   if (online) {
     obj.madymos$R.estimate <<- matrix(obj.madymos$lambda, nb.models, seq.len)
     computeR(obj.madymos$E.estimate, obj.madymos$R.estimate, obj.madymos$LBI.profile, clamp=obj.madymos$clamp)
+  }
+
+  if (compute.LBI) {
+    mu.LBI.update <- estimateLBI(pred, obs, obj.madymos$pct.fst)
+    obj.madymos$mu.LBI <<- obj.madymos$lambda.mu*obj.madymos$mu.LBI + (1-obj.madymos$lambda.mu)*mu.LBI.update
+    obj.madymos$LBI.profile <<- obj.madymos$mu.LBI^(0:(seq.len-1))
   }
 
   return(obj.pred)

@@ -8,6 +8,8 @@ fun_closure_run <- function(n, dataset.run, nb.models, baselines.op, baselines.l
   
   print(paste0('Performing run ', n, ' ...'))
   
+  set.seed(seed=n*1e4 + round(as.numeric(as.POSIXlt(Sys.time()))))
+  
   # samples models to use for model selection
   obj.sampleModels <- sampleAndLoadPred(dataset.run, nb.models, num.modelPerDataset, loc.pred)
   E.per.model <- obj.sampleModels$E.per.model
@@ -22,7 +24,8 @@ fun_closure_run <- function(n, dataset.run, nb.models, baselines.op, baselines.l
   ######################################## model selection ########################################
   #################################################################################################
   
-  obj.madymos <<- madymos(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, lambda=1e-1, thresh.switch.off=0.1)
+  obj.madymos <<- madymos(nb.models, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, lambda=1e-1, thresh.switch.off=0.1, 
+                          lambda.mu=0.9, pct.fst=2/3)
   
   # runs model selection
   N.test <- dim(allpreds)[1]
@@ -37,7 +40,7 @@ fun_closure_run <- function(n, dataset.run, nb.models, baselines.op, baselines.l
   for (jj in 1:N.test) {
     
     pred.jj <- allpreds[jj, , ]
-    obj.select.jj <- runModelSelection(pred=pred.jj, obs=obj.test[jj, ], online=FALSE)
+    obj.select.jj <- runModelSelection(pred=pred.jj, obs=obj.test[jj, ], online=FALSE, compute.LBI=TRUE)
     array.pred.ms[jj, , ] <- obj.select.jj$mat_pred
     
     # aggregate model, opera
