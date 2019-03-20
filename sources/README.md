@@ -10,7 +10,7 @@ source('train_all_datasets.R')
 
 The datasets, the number and types of models to train are set directly in the script:
 
-Example (training 256 models of 3 different types - CF, xgb and GAM - on 5 different datasets, i.e. a total of 3*256*5 models):
+Example (training 256 models of 3 different types - CF, xgb and GAM - on 5 different datasets, i.e. a total of 3 x 256 x 5 models):
 ```r
 model.types <- c('CF', 'xgb', 'GAM')
 dataset.names <- c('bikeShare', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
@@ -51,11 +51,20 @@ baselines.op <- c('FS', 'MLpol', 'MLewa', 'EWA')
 N.run <- 1
 ```
 
-### Performing and end-to-end example run:
-A example script can be run that summarizes all the above tests and showcases ther performance of our model selection algorithm:
+The performance scores associated with each run are stored on the disk a folder: "./resMultirun/".
+
+The results from each run are plotted, and assembled in a table (such as the one in the paper) by running the command:
+
+```r
+source('analyse_res.R')
+```
+
+
+### End-to-end example run:
+An example script can be run that summarizes all the above tests - from model training to model prediction and selection. This example showcases the gain in performance brought by using our model selection algorithm, compared to simple ensembling/model selection approaches (such as prediction averaging and cross validation) commonly used to aggregate several models:
 
 ```r
 source('example_use.R')
 ```
 
-The script takes less than 1 minute to run on an intel core I7, with linux distribution.
+The script takes less than 1 minute to run on an Intel Core I7, with a Linux distribution.
