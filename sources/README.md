@@ -18,7 +18,7 @@ nb.models <- 256 # number of models to train per type of model and per dataset
 ```
 
 Three types of models are implemented: Siamese-network based Collaborative Filtering (CF), XGBoost regression trees (xgb) and Generalized additive models (GAMs).
-CF models are pretty long to train since it is a custom-based implementation we did in R. A more competitive package concerning these models will be released later.
+CF models are pretty long to train since it is a custom implementation we did in R. We will release later a more efficient package implementing these models.
 
 Trained models are stored on the disk in a local folder of the type: "./predModels_#DATASET_#MODELTYPE/".
 
