@@ -1,5 +1,18 @@
 ## Running tests
 
+### Quick try
+
+The script "example_run.R" can be run to have a quick overview of the potential of our model selection approach compared to basic ensembling selection techniques such as model averaging and cross validation.
+The sript performs model training, model prediction and selection, and plots the resulting performance scores, as well, as an example of a model selection strategy re-updated at each instant of the day, as new observations get available.
+
+```r
+source('example_use.R')
+```
+
+The script takes less than 1 minute to run on an Intel Core I7, with a Linux distribution.
+
+The paragraphs below describe the way to perform more thorough tests, and, in particular, how to reproduce the results of the paper.
+
 ### Training models
 
 Models are trained by running the following command from the R command line:
