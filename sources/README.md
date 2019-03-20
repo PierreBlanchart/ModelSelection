@@ -10,7 +10,7 @@ source('train_all_datasets.R')
 
 The datasets, the number and types of models to train are set directly in the script:
 
-Example (training 256 models of 3 different types - CF, xgb and GAM - on 5 different datasets, i.e. a total of 3 x 256 x 5 models):
+Example : training 256 models of 3 different types - CF, xgb and GAM - on 5 different datasets, i.e. a total of 3 x 256 x 5 models :
 ```r
 model.types <- c('CF', 'xgb', 'GAM')
 dataset.names <- c('bikeShare', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
@@ -30,7 +30,7 @@ Each trained model is used to predict the test set of each dataset by running th
 source('test_all_datasets.R')
 ```
 
-Prediction are stored on the disk in a folder: "./allpreds/".
+Prediction are stored on the disk in a local folder: "./allpreds/".
 
 ### Running model selection
 
@@ -42,7 +42,7 @@ source('run_tests.R')
 
 The datasets, the number and types of models to select from, as well as the number of run to perform and the baselines to compare to are set directly in the script:
 
-Example (Performing model selection among 3 pools of models of respective sizes 8, 16 and 32 containing models of 2 different types - xgb and GAM - trained on the 'CO2' dataset, and comparing each time with the baselines FS, MLpol, MLewa and EWA):
+Example : performing model selection among 3 pools of models of respective sizes 8, 16 and 32 containing models of 2 different types - xgb and GAM - trained on the 'CO2' dataset, and comparing each time with the baselines FS, MLpol, MLewa and EWA :
 ```r
 model.types <- c('xgb', 'GAM')
 dataset.run <- 'CO2'
@@ -51,7 +51,7 @@ baselines.op <- c('FS', 'MLpol', 'MLewa', 'EWA')
 N.run <- 1
 ```
 
-The performance scores associated with each run are stored on the disk a folder: "./resMultirun/".
+The performance scores associated with each run are stored on the disk in a local folder: "./resMultirun/".
 
 The results from each run are plotted, and assembled in a table (such as the one in the paper) by running the command:
 
