@@ -6,7 +6,7 @@ source('utils_generic.R')
 ###########################################################################################################
 ###########################################################################################################
 loc.results <- './resMultirun/'
-dataset.names <- c('bikeShare', 'CO2', 'Irradiance', 'Electricity')
+dataset.names <- c('bikeShare', 'CO2', 'SolarEnergy', 'Electricity')
 nb.models <- c(16, 64, 128)
 
 
@@ -16,18 +16,18 @@ nb.models <- c(16, 64, 128)
 results <- list()
 for (dataset in dataset.names) {
   
+  results[[dataset]] <- list()
   for (nb in 1:length(nb.models)) {
     
-    if (!file.exists(paste0(loc.results, '/results_', dataset, '_', nb.models[nb], '.rds'))) {
-      next;
-    } else {
-      if (is.null(results[[dataset]])) results[[dataset]] <- list();
-      results[[dataset]][[nb]] <- list()
-    }
+    results[[dataset]][[nb]] <- list()
+    if (!file.exists(paste0(loc.results, '/results_', dataset, '_', nb.models[nb], '.rds'))) next;
     res.run <- readRDS(file=paste0(loc.results, '/results_', dataset, '_', nb.models[nb], '.rds'))
     
     N.run <- length(res.run)
     seq.len <- length(res.run[[1]]$cae.ms)
+    start.t <- 1; end.t <- seq.len-1
+    if (dataset == 'SolarEnergy') start.t <- 11 # 5H30 <==> earliest sunrise (no observations are done at night time)
+    
     baselines.op <- rownames(res.run[[1]]$cae.op)
     
     mat.cae.ms <- matrix(0, N.run, seq.len)
@@ -41,12 +41,12 @@ for (dataset in dataset.names) {
       mat.cae.op[, n, ] <- res.run[[n]]$cae.op
     }
     
-    results[[dataset]][[nb]]$ms <- computeMCAE(mat.cae.ms)
-    results[[dataset]][[nb]]$aggr <- computeMCAE(mat.cae.aggr)
-    results[[dataset]][[nb]]$bm <- computeMCAE(mat.cae.bm)
+    results[[dataset]][[nb]]$ms <- computeMCAE(mat.cae.ms, start.t, end.t)
+    results[[dataset]][[nb]]$aggr <- computeMCAE(mat.cae.aggr, start.t, end.t)
+    results[[dataset]][[nb]]$bm <- computeMCAE(mat.cae.bm, start.t, end.t)
     ind.b <- 1
     for (b in baselines.op) {
-      results[[dataset]][[nb]][[b]] <- computeMCAE(mat.cae.op[ind.b, , ])
+      results[[dataset]][[nb]][[b]] <- computeMCAE(mat.cae.op[ind.b, , ], start.t, end.t)
       ind.b <- ind.b+1
     }
     
@@ -103,7 +103,7 @@ for (dataset in dataset.names) {
     
     for (baseline in baselines.names) {
       
-      if (!is.null(results[[dataset]]) && !is.null(results[[dataset]][[n]])) {
+      if (length(results[[dataset]][[n]]) > 0) {
         txt <- paste0('$', round(results[[dataset]][[n]][[baseline]]$MCAE, 1), 
                       ' \\pm ', round(results[[dataset]][[n]][[baseline]]$sd_CAE, 1), '$')
       } else {
