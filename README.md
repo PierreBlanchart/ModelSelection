@@ -9,7 +9,7 @@ The typical application scenario is the following:
 
 * Exogenous variables are a mix of non-noisy analytical features (such as the time of day, the solar elevation ...), and of noisy/erroneous features (such as weather forecasts).
 
-* Noisy features are updated at the beginning of each period, for the period to come.
+* Noisy features are updated at the beginning of each period, for a defined time horizon running up to several periods ahead, as shown in the figure below.
 
 In this context, our goal is to produce a model selection strategy, that runs from the current time till the end of the prediction horizon (or the end of the current period, depending on what is needed).
 
