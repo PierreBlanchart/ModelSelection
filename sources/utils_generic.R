@@ -154,6 +154,22 @@ scoreRun <- function(array.pred, obj.gt) {
 }
 
 
+computeMCAE <- function(mat.score, start.t, end.t) {
+  seq.len <- end.t-start.t+1
+  N.run <- nrow(mat.score)
+  vmean <- rep(1, seq.len)/seq.len
+  
+  temp <- as.numeric(mat.score[, start.t:end.t]%*%vmean)
+  MCAE <- mean(temp)
+  sd_CAE <- sqrt((1/N.run)*sum((temp - MCAE)^2))
+  
+  # display results
+  print(paste0("MCAE score : ", round(MCAE, 2), " +- ", round(sd_CAE, 2)))
+  
+  return(list(MCAE = MCAE, sd_CAE = sd_CAE))
+}
+
+
 cntModelsPerDataset <- function(model.types, dataset.names) {
   
   nb.types <- length(model.types)
