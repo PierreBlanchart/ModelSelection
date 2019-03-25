@@ -23,7 +23,7 @@ closure_pred_CF <- function(n) {
   obj_pred <- format_CF(obj.split$ind.train, obj.split$ind.test, model.n$ind.feat, target.max=model.n$target.max)
   mat.train <<- obj_pred$mat.train; obj.train <<- obj_pred$obj.train; mat.test <<- obj_pred$mat.test; obj.test <<- obj_pred$obj.test
   
-  obj.pred.n <- rmadymos2:::predictTest.simple(model.n$net, model.n$funLayers, model.n$sigma,
+  obj.pred.n <- predictTest.simple(model.n$net, model.n$funLayers, model.n$sigma,
                                                measure='gaussian', return.pred=TRUE, verbose=TRUE)
   
   # return(matrix(n, N.test, seq.len))
