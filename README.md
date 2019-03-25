@@ -21,7 +21,7 @@ To support the experiments of the paper "Multiple-step-ahead Dynamic Model Selec
 
 ### Bike sharing dataset :
 
-
+A dataset containing 2 years of demand in a bike sharing network with a sampling rate of 1 hour. The value to predict is the total number of bike rentals. There are 14 exogenous variables corresponding to weather forecasts and calendar data.
 
 ### Irradiance dataset :
 
@@ -34,4 +34,21 @@ A dataset containing 4 years of electricity consumption over the territory of Fr
 ### CO2 pollution dataset :
 
 A dataset containing 3.5 years of air quality measures in the metro with a sampling rate of 1 hour. The value to predict is the air concentration in CO2 (parts-per-million -- ppm). There are 8 exogenous features corresponding to weather forecasts and calendar data.
+
+## Using the package
+
+To use the package, go to the source folder, and, first, install the package "modelselect" implementing the MaDyMos method described in the paper (requires RcppArmadillo).
+Other packages are required as well to train the predictors, and perform tests.
+
+```r
+install.packages(pkgs=c("xgboost", "mgcv", "foreach", "abind"))
+install.packages("RcppArmadillo") # the MaDyMos procedure is coded in RcppArmadillo, a templated C++ linear algebra library by Conrad Sanderson.
+install.packages(pkgs="./modelselect/", repos=NULL)
+```
+
+Linux users can install the package "doMC" which allows to parellize the training and testing of models.
+
+```r
+install.packages("doMC")
+```
 
