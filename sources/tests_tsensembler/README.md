@@ -27,7 +27,7 @@ Results from each run are stored on the disk in a local folder "./results_DETS/"
 
 Results recorded in the folder "./results_DETS/" are finally put together to obtain aggregated results over all test runs. A comparison is done with MaDyMos and Opera baselines on the same predictors that were trained in the tsensembler models.
 ```r
-source('gather_results.R')
+source('gather_results_DETS.R')
 ```
 In the header of the script, it should be checked that the initializations of the variables "dataset.run", "nb.models" and "N.run" match the values entered in the previous steps (i.e. dataset.run <--> datasetName, nb.models <--> nModels, and, N.run <--> nRuns).
 

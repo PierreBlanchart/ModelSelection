@@ -36,10 +36,15 @@ test <- as.data.frame(cbind(test[, fs+1, drop=FALSE], test[, 1:fs]))
 
 
 # run tests : retrieve recorded tsensembler test results, and perform comparison with MaDyMos and opera baselines
-PLOT <- FALSE
-res.run <- list()
+mat.cae.ts <- matrix(0, N.run, seq.len)
+mat.cae.ms <- matrix(0, N.run, seq.len)
+mat.cae.op <- array(0, c(length(baselines.op), N.run, seq.len))
+
 for (idrun in 1:N.run) {
   
+  print(paste0("Scoring run ", idrun, " ..."))  
+  
+  # loading ensembling model used for run "idrun"
   DETS.model <- readRDS(file=paste0(loc.models, "/DETS_model_", dataset.run, '_', nb.models, "_r", idrun, ".rds"))
   
   
@@ -86,44 +91,45 @@ for (idrun in 1:N.run) {
   
   
   # score results
-  cae.ts <- scoreRun(array.pred.ts, obj.test)
-  cae.ms <- scoreRun(array.pred.ms, obj.test)
-  cae.op <- matrix(NA, length(baselines.op), seq.len); rownames(cae.op) <- baselines.op
-  for (base in baselines.op)  cae.op[base, ] <- scoreRun(lst.array.pred.op[[base]], obj.test)
-  
-  
-  # plot results
-  if (PLOT) {
-    print(paste0('Aggr. score ts = ',  sum(cae.ts, na.rm=TRUE)))
-    print(paste0('Aggr. score ms = ',  sum(cae.ms, na.rm=TRUE)))
-    N.methods <- 2 + length(baselines.op)
-    colors <- glasbey(); N.colors <- length(colors)
-    plot_curves(
-      subS=subS,
-      step.plot=1,
-      curves=cbind(cae.ts, cae.ms, t(cae.op)),
-      colors= colors[(0:(N.methods-1))%%N.colors + 1],
-      legend=c('ts', 'ms', rownames(cae.op)),
-      x.name='time of day', y.name='cumulative AE'
-    )
+  mat.cae.ts[idrun, ] <- scoreRun(array.pred.ts, obj.test)
+  mat.cae.ms[idrun, ] <- scoreRun(array.pred.ms, obj.test)
+  ind.base <- 1
+  for (base in baselines.op)  {
+    mat.cae.op[ind.base, idrun, ] <- scoreRun(lst.array.pred.op[[base]], obj.test)
+    ind.base <- ind.base+1
   }
-  
-  # format res
-  res.run[[idrun]] <- list(
-    cae.ts=cae.ts,
-    cae.ms=cae.ms,
-    cae.op=cae.op
-  )
   
 }
 
 
-# save results
-loc.results <- './resMultirun/'
-dir.create(file.path('./', loc.results), showWarnings=FALSE)
-saveRDS(file=paste0(loc.results, '/results_', dataset.run, '_', nb.models, '.rds'), res.run)
+# plot averaged results over all runs
+cae.ts <- colMeans(mat.cae.ts)
+cae.ms <- colMeans(mat.cae.ms)
+cae.op <- apply(mat.cae.op, MARGIN=c(1, 3), FUN=mean)
+print(paste0('Aggr. score ts = ', sum(cae.ms, na.rm=TRUE)))
+print(paste0('Aggr. score ms = ',  sum(cae.ms, na.rm=TRUE)))
 
 
+N.methods <- 2 + length(baselines.op)
+colors <- glasbey(); N.colors <- length(colors)
+plot_curves(
+  subS=subS,
+  step.plot=1,
+  curves=cbind(cae.ts, cae.ms, t(cae.op)),
+  colors= colors[(0:(N.methods-1))%%N.colors + 1],
+  legend=c('ts', 'ms', rownames(cae.op)),
+  x.name='time of day', y.name='cumulative AE'
+)
 
+
+# compute MCAE scores
+MCAE.ms <- computeMCAE(mat.cae.ms, 1, seq.len-1)
+MCAE.ts <- computeMCAE(mat.cae.ts, 1, seq.len-1)
+MCAE.op <- list()
+ind.b <- 1
+for (b in baselines.op) {
+  MCAE.op[[b]] <- computeMCAE(mat.cae.op[ind.b, , ], 1, seq.len-1)
+  ind.b <- ind.b+1
+}
 
 
