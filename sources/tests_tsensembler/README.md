@@ -23,7 +23,7 @@ bash run_DETS_tests_shPar.sh nRuns nDays nbModels datasetName nPar
 The above command launches the parallel testing of the previously trained "nRuns" DETS models on the dataset "datasetName" containing "nDays" test days, using "nPar" parallel processes.
 Results from each run are stored on the disk in a local folder "./results_DETS/".
 
-## Gathering results from test run :
+## Gathering results from test runs :
 
 Results recorded in the folder "./results_DETS/" are finally put together to obtain aggregated results over all test runs. A comparison is done with MaDyMos and Opera baselines on the same predictors that were trained in the tsensembler models.
 ```r
