@@ -32,9 +32,9 @@ for (dataset in dataset.names) {
     loc.models <- paste0('./predModels_', dataset, '_', model.type, '/')
     dir.create(file.path('./', loc.models), showWarnings=FALSE)
     
-    # sample feature space
+    # samples feature spaces
     mat.feat <- matrix(runif(nb.models*length(feat.names)), nb.models) > 0.5
-    for (r in 1:nb.models) mat.feat[r, ind.analytical] <- TRUE # hard-encoded inside the formula
+    for (r in 1:nb.models) mat.feat[r, ind.analytical] <- TRUE
     
     if (model.type != 'xgb' && do.par) {
       registerDoMC(min(nb.models, max(1, detectCores()-0))) # number of CPU cores

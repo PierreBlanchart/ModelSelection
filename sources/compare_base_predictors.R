@@ -47,7 +47,7 @@ for (dataset in dataset.names) {
     
   }
   
-  # plot averaged results of over all predictors
+  # plot averaged results over all predictors
   colors <- glasbey(); N.colors <- length(colors)
   plot_curves(
     subS=subS,
