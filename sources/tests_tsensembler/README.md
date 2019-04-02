@@ -1,7 +1,9 @@
-The tests below illustrate the performance of two class of algorithms, DETS and ADE, implemented in the Tsensembler package.
+The tests below illustrate the performance of two classes of algorithms, DETS and ADE, implemented in the [Tsensembler](https://github.com/vcerqueira/tsensembler) package.
 
 * Cerqueira, Vitor; Torgo, Luis; Oliveira, Mariana, and Bernhard Pfahringer. "Dynamic and Heterogeneous Ensembles for Time Series Forecasting." Data Science and Advanced Analytics (DSAA), 2017 IEEE International Conference on. IEEE, 2017.
 * Cerqueira, Vitor; Torgo, Luis; Pinto, Fabio; and Soares, Carlos. "Arbitrated Ensemble for Time Series Forecasting". Joint European Conference on Machine Learning and Knowledge Discovery in Databases. Springer International Publishing, 2017.
+
+
 
 To launch the following tests, the user needs to install our forked implementation of the Tsensembler package.
 ```r
