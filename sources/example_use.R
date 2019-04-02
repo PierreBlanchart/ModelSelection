@@ -100,6 +100,8 @@ array.pred.ms <- array(NA, c(N.test, seq.len, seq.len))
 array.pred.bm <- array(NA, c(N.test, seq.len, seq.len))
 array.pred.aggr <- array(NA, c(N.test, seq.len, seq.len))
 
+strategies.ms <- array(NA, c(N.test, seq.len, seq.len)) # will contain successive model selection strategies for each test day
+
 
 obj.madymos <- madymos(nb.select, seq.len, mat.feat, K=2, mu.LBI=0.8, gamma.DP=0.95, thresh.switch.off=0.1)
 
@@ -117,6 +119,7 @@ for (jj in 1:N.test) { # loops over test days
     # updates model selection strategy
     obj.pred <- updateStrategy(pred.jj[tt:seq.len, , drop=FALSE], newObs=newObs.tt)
     array.pred.ms[jj, tt:seq.len, tt] <- obj.pred$mat_pred # record predictions associated with current model selection strategy on the interval [tt, seq.len]
+    strategies.ms[jj, tt:seq.len, tt] <- obj.pred$mat_index
     
     # best model (oracle)
     array.pred.bm[jj, tt:seq.len, tt] <- pred.jj[tt:seq.len, ind.best.model]
@@ -140,13 +143,27 @@ cae.ms <- scoreRun(array.pred.ms, obj.test)
 cae.bm <- scoreRun(array.pred.bm, obj.test)
 cae.aggr <- scoreRun(array.pred.aggr, obj.test)
 
+# plots CAE scores
 plot_curves(
   subS=subS,
-  step.plot=1,
+  step.plot=1, lwd=2, 
   curves=cbind(cae.ms, cae.bm, cae.aggr),
   colors=c('skyblue3', 'pink', 'darkorange'),
-  legend=c('ms', paste0('bm.: ', model.types[[obj.sampleModels$ind.type[ind.best.model]]]), 'aggr.'),
+  legend=c('MaDyMos', paste0('best model: ', model.types[[obj.sampleModels$ind.type[ind.best.model]]]), 'prediction averaging'),
   x.name='time of day', y.name='cumulative AE'
+)
+
+# plots strategy associated with the test day "ind.plot"
+ind.plot <- 345 # index of test day to plot (1 <= ind.plot <= N.test)
+
+nb.steps <- seq.len-1 # number of computed strategies between t=1 and t=seq.len-1
+sampling.row <- 2 # subsampling of row labels for visibility
+nb.sampling <- floor(nb.steps/sampling.row)+((nb.steps%%sampling.row) > 0)
+plotMatrix(
+  t(strategies.ms[ind.plot, , ]), 
+  labels.rows=paste0(floor(seq(1, seq.len-1, by=sampling.row)/(60/subS)), 'H'), pos.rows=seq(0, 1, length.out=nb.sampling), labels.rows.centered=FALSE, 
+  labels.cols=paste0(seq(0, 24, by=2), 'H'), pos.cols=seq(0, 1, length.out=13), labels.cols.centered=FALSE, 
+  colormap=glasbey()
 )
 
 

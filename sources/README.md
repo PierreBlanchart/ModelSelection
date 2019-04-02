@@ -81,3 +81,12 @@ source('example_use.R')
 ```
 
 The script takes less than 1 minute to run on an Intel Core I7, with a Linux distribution.
+
+The figures below shows the output of the script using the CO2 dataset. 
+* The first figure shows an example run of the MaDyMoS procedure on a single test day. A colored square symbolizes the choice of one model among 16 possible models, with a 1 hour time granularity. At each instant, a strategy is issued that goes from the current time to the end of the prediction horizon (end of the day in this case). Thus, each line of the color matrix below corresponds to a readjustment of the previous model selection strategy given the observations at the current time step.
+* The second figure represents the Cumulative Mean Average Error (CMAE) corresponding to successive strategy re-adjustements between 0H and 24H. For this dataset, a re-adjustment is performed every hour. The CMAE is averaged here over all test days.
+
+![Alt text](./figures/strategy_CO2.png?raw=true "Model Selection Strategy Readjustment")
+![Alt text](./figures/CAE_CO2.png?raw=true "Cumulative Mean Average Error")
+
+
