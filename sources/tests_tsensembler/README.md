@@ -1,8 +1,13 @@
-To launch the following tests, the user needs to install our forked implementation of the tsensembler package.
+The tests below illustrate the performance of two class of algorithms, DETS and ADE, implemented in the Tsensembler package.
+
+* Cerqueira, Vitor; Torgo, Luis; Oliveira, Mariana, and Bernhard Pfahringer. "Dynamic and Heterogeneous Ensembles for Time Series Forecasting." Data Science and Advanced Analytics (DSAA), 2017 IEEE International Conference on. IEEE, 2017.
+* Cerqueira, Vitor; Torgo, Luis; Pinto, Fabio; and Soares, Carlos. "Arbitrated Ensemble for Time Series Forecasting". Joint European Conference on Machine Learning and Knowledge Discovery in Databases. Springer International Publishing, 2017.
+
+To launch the following tests, the user needs to install our forked implementation of the Tsensembler package.
 ```r
 install.packages(pkgs="./tsensembler2/", repos=NULL)
 ```
-It requires the shell tool "GNU parallel", and a big cluster. A single train and test run of a DETS model with 16 predictors takes about 6 hours on a 48 cores cluster node.
+It requires the shell tool "[GNU parallel](https://www.gnu.org/software/parallel/)", and a big cluster. A single train and test run of a DETS model with 16 predictors takes about 6 hours on a 48 cores cluster node.
 
 The following steps then need to be followed in the right order :
 
