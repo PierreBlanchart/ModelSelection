@@ -87,6 +87,7 @@ The figures below shows the output of the script using the CO2 dataset.
 * The second figure represents the Cumulative Mean Average Error (CMAE) corresponding to successive strategy re-adjustements between 0H and 24H. For this dataset, a re-adjustment is performed every hour. The CMAE is averaged here over all test days.
 
 ![Alt text](../figures/strategy_CO2.png?raw=true "Model Selection Strategy Readjustment")
+
 ![Alt text](../figures/CAE_CO2.png?raw=true "Cumulative Mean Average Error")
 
 
