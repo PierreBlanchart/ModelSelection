@@ -31,3 +31,7 @@ source('gather_results_DETS.R')
 ```
 In the header of the script, it should be checked that the initializations of the variables "dataset.run", "nb.models" and "N.run" match the values entered in the previous steps (i.e. dataset.run <--> datasetName, nb.models <--> nModels, and, N.run <--> nRuns).
 
+## Using Tsensembler/ADE :
+
+The same steps as above can be repeated to perform model ensembling with Tsensembler/ADE method. Run the same R and bash scripts by replacing DETS with ADE in the names of scripts.
+The method is much more computationally demanding than DETS though, and we couldn't perform ensembling using more than 16 predictors with our ressources. It remains interesting to test this method though, which has scaling problems but which performs well on a small number of predictors.
