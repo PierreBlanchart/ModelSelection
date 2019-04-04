@@ -1,7 +1,7 @@
 The tests below allow to reproduce the performance scores obtained by the baselines, DETS and ADE, implemented in the [Tsensembler](https://github.com/vcerqueira/tsensembler) package.
 To run the tests, the user needs to install our forked implementation of the Tsensembler package.
 ```r
-install.packages(pkgs="./tsensembler2/", repos=NULL)
+install.packages(pkgs="./tsensembler3/", repos=NULL)
 ```
 The tests requires the shell tool "[GNU parallel](https://www.gnu.org/software/parallel/)". The tests below are computationally intensive : a single train and test run of a DETS model with 16 predictors takes about 7 hours on a 48 cores cluster node.
 

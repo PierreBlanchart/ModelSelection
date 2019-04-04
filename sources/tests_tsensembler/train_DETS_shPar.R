@@ -69,25 +69,25 @@ colnames(mat.feat) <- feat.names
 # generating GAM models formulas
 formula.GAM <- c()
 for (n in 1:nb.models) {
-	if (type.models[n]=='GAM') {
-	  obj.GAM <- generateFormula(dataset.run, mat.feat[n, ], feat.names, data_all)
-		formula.GAM <- c(formula.GAM, obj.GAM$formula)
-	}
+  if (type.models[n]=='GAM') {
+    obj.GAM <- generateFormula(dataset.run, mat.feat[n, ], feat.names, data_all)
+    formula.GAM <- c(formula.GAM, obj.GAM$formula)
+  }
 }
 
 # XGBoost model parameters
 param.xgb <- list(
-	objective = "reg:linear",
-	eval_metric="mae",
-	eta = 0.05,
-	max_depth = 8,
-	colsample_bytree = 0.9,
-	subsample = 0.9,
-	min_child_weight = 4,
-	lambda = 1,
-	maximize=FALSE,
-	nrounds=5e2,
-	verbosity=1
+  objective = "reg:linear",
+  eval_metric="mae",
+  eta = 0.05,
+  max_depth = 8,
+  colsample_bytree = 0.9,
+  subsample = 0.9,
+  min_child_weight = 4,
+  lambda = 1,
+  maximize=FALSE,
+  nrounds=5e2,
+  verbosity=1
 )
 
 # CF model parameters
