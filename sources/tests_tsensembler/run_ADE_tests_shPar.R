@@ -1,9 +1,10 @@
-library(tsensembler2)
+library(tsensembler3)
 library(modelselect)
 library(fastmatch)
 library(mgcv)
 library(xgboost)
 source('../utils_generic.R')
+source('../utils_DNN.R')
 source('../utils_predict.R')
 
 parseCmdLine <- function(flag, cmd_args) {
@@ -40,9 +41,19 @@ N.test <- length(obj.split$ind.test) # number of test days
 
 ########################################################################################################################
 # building the ensemble
+ind.period <- rep(obj.split$ind.train, each=seq.len)
 ind.seq <- rep((obj.split$ind.train-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.train))
 train <- featmat[ind.seq, ]
-train <- as.data.frame(cbind(train[, fs+1, drop=FALSE], train[, 1:fs]))
+index.info <- cbind(ind.period, ind.seq); colnames(index.info) <- c('ind.period', 'ind.seq')
+train <- as.data.frame(cbind(train[, target, drop=FALSE], index.info, train[, feat.names]))
+
+ind.period <- rep(obj.split$ind.test, each=seq.len)
+ind.seq <- rep((obj.split$ind.test-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.test))
+test <- featmat[ind.seq, ]
+index.info <- cbind(ind.period, ind.seq); colnames(index.info) <- c('ind.period', 'ind.seq')
+test <- as.data.frame(cbind(test[, target, drop=FALSE], index.info, test[, feat.names]))
+
+data_all <- rbind(train, test)
 
 
 # setting up base model parameters
@@ -54,11 +65,6 @@ model.init <- ADE.model$model
 
 
 ########################################################################################################################
-ind.seq <- rep((obj.split$ind.test-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.test))
-test <- featmat[ind.seq, ]
-test <- as.data.frame(cbind(test[, fs+1, drop=FALSE], test[, 1:fs]))
-
-
 # compute predictions
 print(paste0("Predicting test day ", ind.day, " ..."))
 pred.n <- predict(model.init@base_ensemble, test[((ind.day-1)*seq.len+1):(ind.day*seq.len), ], use_all=TRUE)

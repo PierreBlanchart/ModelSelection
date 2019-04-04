@@ -1,9 +1,10 @@
-library(tsensembler2)
+library(tsensembler3)
 library(modelselect)
 library(fastmatch)
 library(mgcv)
 library(xgboost)
 source('../utils_generic.R')
+source('../utils_DNN.R')
 source('../utils_GAMs.R')
 source('../utils_predict.R')
 
@@ -40,22 +41,23 @@ target <- colnames(featmat)[ncol(featmat)]
 
 obj.split <- formSplit(pct.test=3e-1, sanity=7) # keeps last 30 percents for test, and removes 7 days between last day of train and first day of test
 obj.test <- getObj(obj.split$ind.test, target.max=1)
+target.max <- max(obj.test)
 N.test <- length(obj.split$ind.test) # number of test days
+rm(obj.test); gc();
 
 
 
 ########################################################################################################################
 # building the ensemble
+ind.period <- rep(obj.split$ind.train, each=seq.len)
 ind.seq <- rep((obj.split$ind.train-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.train))
 train <- featmat[ind.seq, ]
-train <- as.data.frame(cbind(train[, fs+1, drop=FALSE], train[, 1:fs]))
+index.info <- cbind(ind.period, ind.seq); colnames(index.info) <- c('ind.period', 'ind.seq')
+data_all <- as.data.frame(cbind(train[, target, drop=FALSE], index.info, train[, feat.names]))
 
 
 # setting up base model parameters
-while (TRUE) {
-  type.models <- model.types[ceiling(length(model.types)*runif(nb.models))]
-  if (sum(type.models=='xgb') > 0 && sum(type.models=='GAM') > 0) break;
-}
+type.models <- model.types[ceiling(length(model.types)*runif(nb.models))]
 name.models <- paste0(type.models, '_', 1:nb.models)
 
 # sampling model feature spaces
@@ -68,7 +70,7 @@ colnames(mat.feat) <- feat.names
 formula.GAM <- c()
 for (n in 1:nb.models) {
 	if (type.models[n]=='GAM') {
-	  obj.GAM <- generateFormula(dataset.run, mat.feat[n, ], feat.names, train)
+	  obj.GAM <- generateFormula(dataset.run, mat.feat[n, ], feat.names, data_all)
 		formula.GAM <- c(formula.GAM, obj.GAM$formula)
 	}
 }
@@ -88,19 +90,55 @@ param.xgb <- list(
 	verbosity=1
 )
 
-specs <- model_specs(
-	learner = paste0("bm_", model.types),
-	learner_pars = list(
-		bm_xgb = list(model_names=name.models[type.models=='xgb'], mat_feat=mat.feat[type.models=='xgb', , drop=FALSE], param_xgb=param.xgb), 
-		bm_GAM = list(model_names=name.models[type.models=='GAM'], formula=formula.GAM)
-	))
+# CF model parameters
+param.CF <- <- list(
+  # sigma initialization
+  sigma.init=1e0,
+  
+  # NN weights update
+  batch.size=32, # batch size for NN weights update
+  wd=1e-4, # weight decay (L2 regularization)
+  lr=1e-3, # learning rate
+  lrd=1e-7, # learning rate decay
+  nIter=1e1, # number of NN weights update iterations
+  
+  # layers parameters
+  nbh=c(NA, 64, 32), # layer sizes
+  funLayers=c(NA, 'ReLU', 'ReLU'),
+  init.type='Glorot',
+  
+  # sigma update
+  batch.size.sig=32, # batch size for sigma update
+  wd.sig=1e-5,
+  lr.sig=1e-3,
+  lrd.sig=1e-7,
+  nIter.sig=1e1,
+  
+  # alternate optimization
+  sanity.train=3,
+  nIter.optim=15, # number of alternate optimization (NN weights / sigma) iterations
+  sigma.update=TRUE
+)
 
-model.init <- DETS(as.formula(paste0(target, ' ~.')), train, specs)
+learner_pars <- list(
+  bm_CF = list(model_names=name.models[type.models=='CF'], mat_feat=mat.feat[type.models=='CF', , drop=FALSE], target_max=target.max, target=target, param_CF=param.CF), 
+  bm_xgb = list(model_names=name.models[type.models=='xgb'], mat_feat=mat.feat[type.models=='xgb', , drop=FALSE], target=target, param_xgb=param.xgb), 
+  bm_GAM = list(model_names=name.models[type.models=='GAM'], formula=formula.GAM)
+)
+for (i in names(learner_pars)) {
+  if (length(learner_pars[[i]]$model_names)==0) learner_pars[[i]]=NULL
+}
+specs <- model_specs(
+  learner = paste0("bm_", unique(type.models)),
+  learner_pars = learner_pars
+)
+
+model.init <- DETS(as.formula(paste0(target, ' ~.')), data_all, specs)
 
 # saves model
 loc.models <- './models_DETS/'
 dir.create(file.path('./', loc.models), showWarnings=FALSE)
 saveRDS(file=paste0(loc.models, "/DETS_model_", dataset.run, "_", nb.models, "_r", ind.run, ".rds"), 
-        object=list(model=model.init, specs=specs, train=train, mat.feat=mat.feat))
+        object=list(model=model.init, specs=specs, train=data_all, mat.feat=mat.feat))
 
 

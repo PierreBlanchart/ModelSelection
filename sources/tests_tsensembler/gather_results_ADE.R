@@ -2,9 +2,10 @@ library(xgboost)
 library(mgcv)
 library(modelselect)
 library(opera)
-library(tsensembler2)
+library(tsensembler3)
 library(fastmatch)
 source('../utils_generic.R')
+source('../utils_DNN.R')
 loc.models <- './models_ADE/'
 loc.res <- './results_ADE/'
 
@@ -30,9 +31,11 @@ baselines.loss <- baselines.loss[baselines.op]
 
 
 # load meta model
+ind.period <- rep(obj.split$ind.test, each=seq.len)
 ind.seq <- rep((obj.split$ind.test-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.test))
 test <- featmat[ind.seq, ]
-test <- as.data.frame(cbind(test[, fs+1, drop=FALSE], test[, 1:fs]))
+index.info <- cbind(ind.period, ind.seq); colnames(index.info) <- c('ind.period', 'ind.seq')
+test <- as.data.frame(cbind(test[, target, drop=FALSE], index.info, test[, feat.names]))
 
 
 # run tests : retrieve recorded tsensembler test results, and perform comparison with MaDyMos and opera baselines
@@ -46,6 +49,7 @@ for (idrun in 1:N.run) {
   
   # loading ensembling model used for run "idrun"
   ADE.model <- readRDS(file=paste0(loc.models, "/ADE_model_", dataset.run, '_', nb.models, "_r", idrun, ".rds"))
+	data_all <- ADE.model$train
   
   
   # allocate structures to store results
