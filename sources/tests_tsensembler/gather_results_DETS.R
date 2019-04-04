@@ -30,12 +30,20 @@ baselines.op <- c('EWA', 'MLewa', 'MLpol')
 baselines.loss <- baselines.loss[baselines.op]
 
 
-# load meta model
+# load data
+ind.period <- rep(obj.split$ind.train, each=seq.len)
+ind.seq <- rep((obj.split$ind.train-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.train))
+train <- featmat[ind.seq, ]
+index.info <- cbind(ind.period, ind.seq); colnames(index.info) <- c('ind.period', 'ind.seq')
+train <- as.data.frame(cbind(train[, target, drop=FALSE], index.info, train[, feat.names]))
+
 ind.period <- rep(obj.split$ind.test, each=seq.len)
 ind.seq <- rep((obj.split$ind.test-1)*seq.len, each=seq.len) + rep(1:seq.len, length(obj.split$ind.test))
 test <- featmat[ind.seq, ]
 index.info <- cbind(ind.period, ind.seq); colnames(index.info) <- c('ind.period', 'ind.seq')
 test <- as.data.frame(cbind(test[, target, drop=FALSE], index.info, test[, feat.names]))
+
+data_all <- rbind(train, test)
 
 
 # run tests : retrieve recorded tsensembler test results, and perform comparison with MaDyMos and opera baselines
@@ -49,7 +57,6 @@ for (idrun in 1:N.run) {
   
   # loading ensembling model used for run "idrun"
   DETS.model <- readRDS(file=paste0(loc.models, "/DETS_model_", dataset.run, '_', nb.models, "_r", idrun, ".rds"))
-  data_all <- DETS.model$train
   
   
   # allocate structures to store results
