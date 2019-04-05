@@ -5,7 +5,7 @@ source('utils_predict.R')
 
 ########################################################################################################################
 model.types <- c('CF', 'xgb', 'GAM')
-dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
+dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity')
 
 do.par <- TRUE # set this to FALSE on Windows
 if (do.par) library(doMC);

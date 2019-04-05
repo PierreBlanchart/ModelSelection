@@ -6,7 +6,7 @@ source('utils_multirun.R')
 loc.pred <- './allpreds/'
 
 model.types <- c('CF', 'xgb', 'GAM')
-dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
+dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity')
 dataset.run <- 'bike'
 
 num.modelPerDataset <- cntModelsPerDataset(model.types, dataset.names)

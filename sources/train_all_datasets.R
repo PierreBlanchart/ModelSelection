@@ -5,7 +5,7 @@ source('utils_train.R')
 
 ########################################################################################################################
 model.types <- c('CF', 'xgb', 'GAM')
-dataset.names <- c('Electricity', 'CO2', 'Irradiance', 'Electricity', 'Traffic')
+dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity')
 
 nb.models <- 256 # number of models to train per type of model and per dataset
 

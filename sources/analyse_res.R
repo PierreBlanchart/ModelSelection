@@ -6,7 +6,7 @@ source('utils_generic.R')
 ###########################################################################################################
 ###########################################################################################################
 loc.results <- './resMultirun/'
-dataset.names <- c('bikeShare', 'CO2', 'SolarEnergy', 'Electricity')
+dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity')
 nb.models <- c(16, 64, 128)
 
 

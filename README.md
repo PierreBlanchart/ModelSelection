@@ -27,9 +27,9 @@ A dataset containing 2 years of demand in a bike sharing network with a sampling
 
 A solar irradiance dataset containing 3 years of data with a sampling rate of 30 minutes. The value to predict is the Global Horizontal Irradiance (Watts per square meter). There are 10 exogenous features which are a mix of calendar data, and day-ahead weather forecasts.
 
-### Electricity consumption dataset :
+### Electrical load dataset :
 
-A dataset containing 4 years of electricity consumption over the territory of France with a sampling rate of 30 minutes. The value to predict is the electrical consumption (in MegaWatts). There are 119 exogenous features which are a mix of calendar data, day-ahead weather forecasts, and engineered features.
+A dataset containing 4 years of electrical load over the territory of France with a sampling rate of 30 minutes. The value to predict is the electrical load (in MegaWatts). There are 21 exogenous features which are a mix of calendar data, day-ahead weather forecasts, and engineered features.
 
 ### CO2 pollution dataset :
 
@@ -52,3 +52,8 @@ Linux users can install the package "doMC" which allows to parellize the trainin
 install.packages("doMC")
 ```
 
+An example script can be run that summarizes all the above tests - from model training to model prediction and selection. This example showcases the gain in performance brought by using our model selection algorithm, compared to simple ensembling/model selection approaches (such as prediction averaging and cross validation) commonly used to aggregate several models:
+
+```r
+source('example_use.R')
+```

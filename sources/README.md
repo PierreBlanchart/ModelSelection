@@ -2,7 +2,7 @@
 
 ### Quick try
 
-The script "example_run.R" can be run to have a quick overview of the potential of our model selection approach compared to basic ensembling selection techniques such as model averaging and cross validation.
+The script "example_use.R" can be run to have a quick overview of the potential of our model selection approach compared to basic ensembling selection techniques such as model averaging and cross validation.
 The script performs model training, model prediction and selection, and plots the resulting performance scores, as well, as an example of a model selection strategy re-updated at each instant, as new observations get available.
 
 ```r

@@ -6,7 +6,7 @@ source('utils_generic.R')
 ###########################################################################################################
 ###########################################################################################################
 loc.pred <- './allpreds/'
-dataset.names <- c('bike', 'CO2', 'SolarEnergy', 'ElecReduc')
+dataset.names <- c('bike', 'CO2', 'Irradiance', 'Electricity')
 model.types <- c('CF', 'xgb', 'GAM')
 
 

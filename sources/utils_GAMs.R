@@ -4,27 +4,6 @@ generateFormula <- function(dataset, ind.feat, feat.names, feat.data.train, verb
   
   switch(dataset, 
          
-         "Traffic" = {
-           tv1 <- c("Temperature.y", "Shortwaveirradiation.y", "Rainfall.y", "RelativeHumidity.y")
-           tv2 <- "Shortwaveirradiation.y"
-           
-           ind.keep <- rep(FALSE, length(feat.names))
-           names(ind.keep) <- feat.names
-           ind.keep[c("hourminuteofday", "dayofweek", "dayofyear", "month.int", tv1, tv2, "isbizday", "isweekend")] <- TRUE
-           
-           tv1 <- intersect(tv1, feat.names[ind.feat])
-           tv2 <- intersect(tv2, feat.names[ind.feat])
-           
-           myformula <- c(
-             "value ~ te(hourminuteofday, dayofweek, k=c(24, 7))", 
-             "s(dayofyear, k=20)", 
-             "s(month.int, k=12)", 
-             if (length(tv1) > 0) paste0("s(",  paste0(tv1, collapse=", "), ", k=20)"), 
-             if (length(tv2) > 0) paste0("s(", tv2, ", k=20)"), 
-             "isbizday + isweekend"
-           )
-         }, 
-         
          "CO2" = {
            tv1 <- c("temp.forecast", "neb.forecast")
            
