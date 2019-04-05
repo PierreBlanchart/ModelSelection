@@ -1,6 +1,6 @@
 ## Forecasting using Dynamic Model Selection
 
-This package optimizes muti-step model selection strategies in the context of multiple-step-ahead multivariate pseudo-periodic time series forecasting. The core method, MaDyMos (Multiple-step-ahead Dynamic Model Selection), uses observations about the past local performance of each model to issue a model selection strategy running on the whole prediction horizon. 
+This package optimizes muti-step model selection strategies in the context of multiple-step-ahead multivariate pseudo-periodic time series forecasting. The core method, MaDyMoS (Multiple-step-ahead Dynamic Model Selection), uses observations about the past local performance of each model to issue a model selection strategy running on the whole prediction horizon. 
 As new observations become available, the model is able to update the current model selection strategy in an online way, and as such, is designed for fine-grained and reactive management of complex dynamical systems.
 
 The typical application scenario is the following:
@@ -37,12 +37,12 @@ A dataset containing 3.5 years of air quality measures in the metro with a sampl
 
 ## Using the package
 
-To use the package, go to the source folder, and, first, install the package "modelselect" implementing the MaDyMos method described in the paper (requires RcppArmadillo).
+To use the package, go to the source folder, and, first, install the package "modelselect" implementing the MaDyMoS method described in the paper (requires RcppArmadillo).
 Other packages are required as well to train the predictors, and perform tests.
 
 ```r
 install.packages(pkgs=c("xgboost", "mgcv", "foreach", "abind"))
-install.packages("RcppArmadillo") # the MaDyMos procedure is coded in RcppArmadillo, a templated C++ linear algebra library by Conrad Sanderson.
+install.packages("RcppArmadillo") # the MaDyMoS procedure is coded in RcppArmadillo, a templated C++ linear algebra library by Conrad Sanderson.
 install.packages(pkgs="./modelselect/", repos=NULL)
 ```
 
@@ -52,7 +52,7 @@ Linux users can install the package "doMC" which allows to parellize the trainin
 install.packages("doMC")
 ```
 
-An example script can be run that summarizes all the above tests - from model training to model prediction and selection. This example showcases the gain in performance brought by using our model selection algorithm, compared to simple ensembling/model selection approaches (such as prediction averaging and cross validation) commonly used to aggregate several models:
+An example script [example_use.R](./sources/example_use.R) can be run that summarizes all the above tests - from model training to model prediction and selection. This example showcases the gain in performance brought by using our model selection algorithm, compared to simple ensembling/model selection approaches (such as prediction averaging and cross validation) commonly used to aggregate several models:
 
 ```r
 source('example_use.R')
